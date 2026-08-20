@@ -18,7 +18,7 @@
     label { display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 5px; font-weight: 600; }
     input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; background: #fdfdfd; }
     
-    .opinion-box { background: #f1f5f9; padding: 12px; border-radius: 10px; margin: 10px 0; font-size: 0.9rem; color: #475569; }
+    .result-box { background: #f1f5f9; padding: 12px; border-radius: 10px; margin: 10px 0; font-size: 0.9rem; color: #475569; border-left: 4px solid #94a3b8; }
     .decision-card { background: #eff6ff; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #bfdbfe; }
     .decision-card label { color: var(--primary); }
     .decision-date { font-size: 1.3rem; font-weight: 800; color: #1e293b; margin-top: 5px; }
@@ -54,7 +54,6 @@
       render(); 
     }
 
-    // 클릭 이벤트가 밖으로 퍼져나가는 것을 막음
     function toggleDetails(e, index) {
       e.stopPropagation(); 
       expanded[index] = !expanded[index];
@@ -65,7 +64,8 @@
     function addOrg() {
       const name = document.getElementById('orgName').value;
       if (!name) return;
-      items.push({ id: Date.now(), name, sentDate: '', opinionDate: '' });
+      // investigationEndDate 추가
+      items.push({ id: Date.now(), name, invEndDate: '', sentDate: '', opinionDate: '' });
       save(); document.getElementById('orgName').value = ''; document.getElementById('nameDialog').close();
     }
 
@@ -85,16 +85,30 @@
       const list = document.getElementById('itemList');
       list.innerHTML = '';
       items.forEach((item, index) => {
+        // 데이터 준비
+        const invEnd = item.invEndDate ? new Date(item.invEndDate) : null;
         const sent = item.sentDate ? new Date(item.sentDate) : null;
-        let opinionHtml = "발송일 입력 필요", decisionHtml = "발송일 입력 필요";
+        
+        // 1. 발송 가능일 (조사종료일 + 30일)
+        let dispatchHtml = "조사종료일 입력 필요";
+        if(invEnd) {
+            const dDue = new Date(invEnd); dDue.setDate(invEnd.getDate() + 30);
+            dispatchHtml = `${formatDate(dDue)} <span class="d-day">${getDday(dDue)}</span>`;
+        }
 
-        if (sent) {
-          const opDue = new Date(sent); opDue.setDate(sent.getDate() + 14);
-          opinionHtml = `${formatDate(opDue)} <span class="d-day">${getDday(opDue)}</span>`;
+        // 2. 의견접수 가능일 (발송일 + 14일)
+        let opinionHtml = "발송일 입력 필요";
+        if(sent) {
+            const opDue = new Date(sent); opDue.setDate(sent.getDate() + 14);
+            opinionHtml = `${formatDate(opDue)} <span class="d-day">${getDday(opDue)}</span>`;
+        }
 
-          const baseDate = item.opinionDate ? new Date(item.opinionDate) : new Date(sent);
-          const decDue = new Date(baseDate); decDue.setDate(baseDate.getDate() + 30);
-          decisionHtml = `${formatDate(decDue)} <span class="d-day">${getDday(decDue)}</span>`;
+        // 3. 결정통보 예정일 (의견접수일 존재 시 그날 + 30일, 아님 발송일 + 30일)
+        let decisionHtml = "발송일 입력 필요";
+        if(sent) {
+            const baseDate = item.opinionDate ? new Date(item.opinionDate) : new Date(sent);
+            const decDue = new Date(baseDate); decDue.setDate(baseDate.getDate() + 30);
+            decisionHtml = `${formatDate(decDue)} <span class="d-day">${getDday(decDue)}</span>`;
         }
 
         const isExpanded = expanded[index];
@@ -105,14 +119,22 @@
             ${item.name} <span>${isExpanded ? '▲' : '▼'}</span>
           </div>
           <div class="card-content" style="display: ${isExpanded ? 'block' : 'none'}">
+            <!-- 조사종료일 섹션 -->
+            <div class="input-row"><label>조사종료일</label><input type="date" value="${item.invEndDate}" onchange="updateData(${index}, 'invEndDate', this.value)"></div>
+            <div class="result-box" style="border-left-color: #f87171;">📍 지원결과서 발송 가능일: ${dispatchHtml}</div>
+            
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
+            
+            <!-- 기존 섹션들 -->
             <div class="input-row"><label>지원결과서 발송일</label><input type="date" value="${item.sentDate}" onchange="updateData(${index}, 'sentDate', this.value)"></div>
+            <div class="result-box">📍 의견접수 가능일: ${opinionHtml}</div>
             <div class="input-row"><label>의견 접수일 (선택)</label><input type="date" value="${item.opinionDate}" onchange="updateData(${index}, 'opinionDate', this.value)"></div>
-            <div class="opinion-box">📍 의견접수 가능일: ${opinionHtml}</div>
+            
             <div class="decision-card">
               <label>결정통보 예정일</label>
               <div class="decision-date">${decisionHtml}</div>
             </div>
-            <button onclick="deleteItem(${index})" style="width:100%; margin-top:15px; padding:8px; background:none; border:1px solid #fda4af; color:#e11d48; border-radius:8px; font-size:0.8rem;">기관 삭제하기</button>
+            <button onclick="deleteItem(${index})" style="width:100%; margin-top:20px; padding:10px; background:none; border:1px solid #fda4af; color:#e11d48; border-radius:10px; font-size:0.85rem;">기관 삭제하기</button>
           </div>
         `;
         list.appendChild(el);

@@ -5,30 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>현조캘린더</title>
   <style>
-    :root { --primary: #334155; --accent: #e11d48; --bg: #f8fafc; }
+    :root { --primary: #3b82f6; --accent: #dc2626; --bg: #f4f6f8; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); padding: 15px; margin: 0; }
+    h1 { font-size: 1.5rem; color: #334155; margin-bottom: 20px; text-align: center; font-weight: 800; }
+    .btn-add { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
     
-    /* 제목 차콜색으로 변경 */
-    h1 { font-size: 1.5rem; color: #334155; margin-bottom: 25px; text-align: center; font-weight: 800; }
-
-    .btn-add { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; margin-bottom: 20px; }
-    
-    .item-card { background: white; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e2e8f0; }
-    .card-header { padding: 16px; font-weight: 700; font-size: 1.1rem; cursor: pointer; color: #334155; display: flex; justify-content: space-between; align-items: center; }
+    .item-card { background: white; border-radius: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
+    .card-header { padding: 16px; font-weight: 700; font-size: 1.1rem; cursor: pointer; color: #1e293b; display: flex; justify-content: space-between; align-items: center; }
     .card-content { padding: 0 16px 16px 16px; display: none; }
     
     .input-row { margin: 15px 0; }
     label { display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 5px; font-weight: 600; }
-    input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 1rem; background: #fff; }
+    input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; background: #fdfdfd; }
     
-    /* 결과 박스 심플하게 */
-    .result-box { background: #f8fafc; padding: 12px; border-radius: 4px; margin: 10px 0; font-size: 0.9rem; color: #334155; border: 1px solid #e2e8f0; }
-    .decision-card { background: #f1f5f9; padding: 15px; border-radius: 4px; margin-top: 15px; border: 1px solid #cbd5e1; }
-    .decision-date { font-size: 1.2rem; font-weight: 800; color: #0f172a; margin-top: 5px; }
+    /* 결과 박스 통일 (2줄 스타일) */
+    .result-box { background: #f8fafc; padding: 12px; border-radius: 10px; margin: 10px 0; border: 1px solid #e2e8f0; font-size: 0.9rem; color: #475569; }
+    .result-title { font-weight: bold; margin-bottom: 4px; display: block; }
+    
+    .decision-card { background: #eff6ff; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #bfdbfe; }
+    .decision-card label { color: var(--primary); font-size: 0.8rem; font-weight: bold; }
+    .decision-date { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-top: 4px; }
     
     .d-day { color: var(--accent); font-weight: 700; }
     .footer { text-align: center; font-size: 0.75rem; color: #94a3b8; margin-top: 30px; padding-bottom: 20px; }
-    dialog { border: none; border-radius: 8px; padding: 25px; width: 85%; }
+    dialog { border: none; border-radius: 16px; padding: 25px; width: 85%; }
   </style>
 </head>
 <body>
@@ -43,8 +43,8 @@
     <h3 style="margin-top:0">기관 이름</h3>
     <input type="text" id="orgName" placeholder="기관명을 입력하세요">
     <div style="display:flex; gap:10px; margin-top:20px;">
-      <button onclick="addOrg()" style="flex:1; padding:10px; background:var(--primary); color:white; border:none; border-radius:4px;">확인</button>
-      <button onclick="document.getElementById('nameDialog').close()" style="flex:1; padding:10px; background:#e2e8f0; border:none; border-radius:4px;">취소</button>
+      <button onclick="addOrg()" style="flex:1; padding:10px; background:var(--primary); color:white; border:none; border-radius:8px;">확인</button>
+      <button onclick="document.getElementById('nameDialog').close()" style="flex:1; padding:10px; background:#e2e8f0; border:none; border-radius:8px;">취소</button>
     </div>
   </dialog>
 
@@ -70,15 +70,13 @@
 
     function formatDate(d) {
       const days = ['일', '월', '화', '수', '목', '금', '토'];
-      return `${d.getFullYear()}.${(d.getMonth()+1)}.${d.getDate()}.(${days[d.getDay()]})`;
+      return `${d.getFullYear()}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getDate()}.(${days[d.getDay()]})`;
     }
 
     function getDdayString(target) {
       const today = new Date(); today.setHours(0,0,0,0);
       const diff = Math.ceil((target - today) / (86400000));
-      let str = "";
-      if (diff === 0) str = "D-Day";
-      else str = diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
+      let str = diff === 0 ? "D-Day" : (diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`);
       return `${formatDate(target)}까지 ${str}`;
     }
 
@@ -89,27 +87,18 @@
         const invEnd = item.invEndDate ? new Date(item.invEndDate) : null;
         const sent = item.sentDate ? new Date(item.sentDate) : null;
         
-        // 1. 발송 가능일 (조사종료일 + 29일 = 초일산입 30일)
-        let dispatchHtml = "조사종료일 입력 필요";
-        if(invEnd) {
-            const dDue = new Date(invEnd); dDue.setDate(invEnd.getDate() + 29);
-            dispatchHtml = `<span class="d-day">${getDdayString(dDue)}</span>`;
-        }
+        // 1. 발송 가능일 (조사종료일 + 29일)
+        let dispatchHtml = invEnd ? `<span class="d-day">${getDdayString(new Date(invEnd.getTime() + 29*86400000))}</span>` : "조사종료일 입력 필요";
 
-        // 2. 의견접수 가능일 (발송일 + 14일 = 초일산입 15일)
-        let opinionHtml = "발송일 입력 필요";
-        if(sent) {
-            const opDue = new Date(sent); opDue.setDate(sent.getDate() + 14);
-            opinionHtml = `<span class="d-day">${getDdayString(opDue)}</span>`;
-        }
+        // 2. 의견접수 가능일 (발송일 + 15일)
+        let opinionHtml = sent ? `<span class="d-day">${getDdayString(new Date(sent.getTime() + 15*86400000))}</span>` : "발송일 입력 필요";
 
-        // 3. 결정통보 예정일 (의견 접수 시 접수일 + 29일(초일산입 30), 미접수 시 발송일 + 14일(초일산입 15))
+        // 3. 결정통보 예정일 (접수 시 접수+29, 미접수 시 발송+15)
         let decisionHtml = "발송일 입력 필요";
         if(sent) {
             const baseDate = item.opinionDate ? new Date(item.opinionDate) : new Date(sent);
-            const daysToAdd = item.opinionDate ? 29 : 14; 
-            const decDue = new Date(baseDate); decDue.setDate(baseDate.getDate() + daysToAdd);
-            decisionHtml = `<span class="d-day">${getDdayString(decDue)}</span>`;
+            const daysToAdd = item.opinionDate ? 29 : 15;
+            decisionHtml = `<span class="d-day">${getDdayString(new Date(baseDate.getTime() + daysToAdd*86400000))}</span>`;
         }
 
         const isExpanded = expanded[index];
@@ -121,19 +110,19 @@
           </div>
           <div class="card-content" style="display: ${isExpanded ? 'block' : 'none'}">
             <div class="input-row"><label>조사종료일</label><input type="date" value="${item.invEndDate}" onchange="updateData(${index}, 'invEndDate', this.value)"></div>
-            <div class="result-box">지원결과서 발송 가능일: ${dispatchHtml}</div>
+            <div class="result-box"><span class="result-title">지원결과서 발송 가능일</span>${dispatchHtml}</div>
             
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
             
             <div class="input-row"><label>지원결과서 발송일</label><input type="date" value="${item.sentDate}" onchange="updateData(${index}, 'sentDate', this.value)"></div>
-            <div class="result-box">의견접수 가능일: ${opinionHtml}</div>
+            <div class="result-box"><span class="result-title">의견접수 가능일</span>${opinionHtml}</div>
             <div class="input-row"><label>의견 접수일 (선택)</label><input type="date" value="${item.opinionDate}" onchange="updateData(${index}, 'opinionDate', this.value)"></div>
             
             <div class="decision-card">
               <label>결정통보 예정일</label>
               <div class="decision-date">${decisionHtml}</div>
             </div>
-            <button onclick="deleteItem(${index})" style="width:100%; margin-top:20px; padding:10px; background:none; border:1px solid #fda4af; color:#e11d48; border-radius:4px; font-size:0.85rem;">기관 삭제하기</button>
+            <button onclick="deleteItem(${index})" style="width:100%; margin-top:20px; padding:10px; background:none; border:1px solid #fda4af; color:#e11d48; border-radius:8px; font-size:0.85rem;">기관 삭제하기</button>
           </div>
         `;
         list.appendChild(el);

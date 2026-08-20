@@ -7,7 +7,15 @@
   <style>
     :root { --primary: #2563eb; --accent: #dc2626; --bg: #f8fafc; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); padding: 15px; margin: 0; }
-    h1 { font-size: 1.5rem; color: #1e293b; margin-bottom: 20px; text-align: center; }
+    
+    /* 제목 스타일 변경 */
+    h1 { 
+        font-size: 1.8rem; margin-bottom: 25px; text-align: center; font-weight: 900;
+        background: linear-gradient(135deg, #1e40af, #6d28d9); 
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        letter-spacing: -0.5px;
+    }
+
     .btn-add { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
     
     .item-card { background: white; border-radius: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
@@ -30,7 +38,7 @@
 </head>
 <body>
 
-  <h1>현조캘린더</h1>
+  <h1>✨ 현조캘린더</h1>
   <button class="btn-add" onclick="document.getElementById('nameDialog').showModal()">+ 기관 추가하기</button>
   <div id="itemList"></div>
 
@@ -64,7 +72,6 @@
     function addOrg() {
       const name = document.getElementById('orgName').value;
       if (!name) return;
-      // investigationEndDate 추가
       items.push({ id: Date.now(), name, invEndDate: '', sentDate: '', opinionDate: '' });
       save(); document.getElementById('orgName').value = ''; document.getElementById('nameDialog').close();
     }
@@ -78,21 +85,20 @@
       const today = new Date(); today.setHours(0,0,0,0);
       const diff = Math.ceil((target - today) / (86400000));
       if (diff === 0) return "D-Day";
-      return diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
+      return diff > 0 ? `D-${diff}일 까지` : `D+${Math.abs(diff)}일 지남`;
     }
 
     function render() {
       const list = document.getElementById('itemList');
       list.innerHTML = '';
       items.forEach((item, index) => {
-        // 데이터 준비
         const invEnd = item.invEndDate ? new Date(item.invEndDate) : null;
         const sent = item.sentDate ? new Date(item.sentDate) : null;
         
-        // 1. 발송 가능일 (조사종료일 + 30일)
+        // 1. 발송 가능일 (조사종료일 + 29일 = 초일산입 30일)
         let dispatchHtml = "조사종료일 입력 필요";
         if(invEnd) {
-            const dDue = new Date(invEnd); dDue.setDate(invEnd.getDate() + 30);
+            const dDue = new Date(invEnd); dDue.setDate(invEnd.getDate() + 29);
             dispatchHtml = `${formatDate(dDue)} <span class="d-day">${getDday(dDue)}</span>`;
         }
 
@@ -103,11 +109,11 @@
             opinionHtml = `${formatDate(opDue)} <span class="d-day">${getDday(opDue)}</span>`;
         }
 
-        // 3. 결정통보 예정일 (의견접수일 존재 시 그날 + 30일, 아님 발송일 + 30일)
+        // 3. 결정통보 예정일 (발송일/의견일 + 29일 = 초일산입 30일)
         let decisionHtml = "발송일 입력 필요";
         if(sent) {
             const baseDate = item.opinionDate ? new Date(item.opinionDate) : new Date(sent);
-            const decDue = new Date(baseDate); decDue.setDate(baseDate.getDate() + 30);
+            const decDue = new Date(baseDate); decDue.setDate(baseDate.getDate() + 29);
             decisionHtml = `${formatDate(decDue)} <span class="d-day">${getDday(decDue)}</span>`;
         }
 
@@ -119,13 +125,11 @@
             ${item.name} <span>${isExpanded ? '▲' : '▼'}</span>
           </div>
           <div class="card-content" style="display: ${isExpanded ? 'block' : 'none'}">
-            <!-- 조사종료일 섹션 -->
             <div class="input-row"><label>조사종료일</label><input type="date" value="${item.invEndDate}" onchange="updateData(${index}, 'invEndDate', this.value)"></div>
             <div class="result-box" style="border-left-color: #f87171;">📍 지원결과서 발송 가능일: ${dispatchHtml}</div>
             
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
             
-            <!-- 기존 섹션들 -->
             <div class="input-row"><label>지원결과서 발송일</label><input type="date" value="${item.sentDate}" onchange="updateData(${index}, 'sentDate', this.value)"></div>
             <div class="result-box">📍 의견접수 가능일: ${opinionHtml}</div>
             <div class="input-row"><label>의견 접수일 (선택)</label><input type="date" value="${item.opinionDate}" onchange="updateData(${index}, 'opinionDate', this.value)"></div>

@@ -10,10 +10,10 @@
     h1 { font-size: 1.5rem; color: #1e293b; margin-bottom: 20px; text-align: center; }
     .btn-add { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
     
-    details { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    summary { font-weight: 700; font-size: 1.1rem; cursor: pointer; color: #334155; list-style: none; }
-    summary::marker { display: none; }
-    summary:after { content: '▼'; float: right; font-size: 0.8rem; color: #94a3b8; }
+    /* 커스텀 카드 스타일 */
+    .item-card { background: white; border-radius: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+    .card-header { padding: 16px; font-weight: 700; font-size: 1.1rem; cursor: pointer; color: #334155; display: flex; justify-content: space-between; align-items: center; }
+    .card-content { padding: 0 16px 16px 16px; display: none; }
     
     .input-row { margin: 15px 0; }
     label { display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 5px; font-weight: 600; }
@@ -48,7 +48,18 @@
 
   <script>
     let items = JSON.parse(localStorage.getItem('deadlines') || '[]');
-    function save() { localStorage.setItem('deadlines', JSON.stringify(items)); render(); }
+    let expanded = JSON.parse(localStorage.getItem('expanded') || '{}');
+
+    function save() { 
+      localStorage.setItem('deadlines', JSON.stringify(items)); 
+      render(); 
+    }
+
+    function toggleDetails(index) {
+      expanded[index] = !expanded[index];
+      localStorage.setItem('expanded', JSON.stringify(expanded));
+      render();
+    }
 
     function addOrg() {
       const name = document.getElementById('orgName').value;
@@ -80,22 +91,29 @@
           const opDue = new Date(sent); opDue.setDate(sent.getDate() + 14);
           opinionHtml = `${formatDate(opDue)} <span class="d-day">${getDday(opDue)}</span>`;
 
+          // 발송일 + 30일 (의견접수일 있으면 거기로부터 +30일)
           const baseDate = item.opinionDate ? new Date(item.opinionDate) : new Date(sent);
           const decDue = new Date(baseDate); decDue.setDate(baseDate.getDate() + 30);
           decisionHtml = `${formatDate(decDue)} <span class="d-day">${getDday(decDue)}</span>`;
         }
 
-        const el = document.createElement('details');
+        const isExpanded = expanded[index];
+        const el = document.createElement('div');
+        el.className = 'item-card';
         el.innerHTML = `
-          <summary>${item.name}</summary>
-          <div class="input-row"><label>지원결과서 발송일</label><input type="date" value="${item.sentDate}" onchange="updateData(${index}, 'sentDate', this.value)"></div>
-          <div class="input-row"><label>의견 접수일 (선택)</label><input type="date" value="${item.opinionDate}" onchange="updateData(${index}, 'opinionDate', this.value)"></div>
-          <div class="opinion-box">📍 의견접수 가능일: ${opinionHtml}</div>
-          <div class="decision-card">
-            <label>결정통보 예정일</label>
-            <div class="decision-date">${decisionHtml}</div>
+          <div class="card-header" onclick="toggleDetails(${index})">
+            ${item.name} <span>${isExpanded ? '▲' : '▼'}</span>
           </div>
-          <button onclick="deleteItem(${index})" style="width:100%; margin-top:15px; padding:8px; background:none; border:1px solid #fda4af; color:#e11d48; border-radius:8px; font-size:0.8rem;">기관 삭제하기</button>
+          <div class="card-content" style="display: ${isExpanded ? 'block' : 'none'}">
+            <div class="input-row"><label>지원결과서 발송일</label><input type="date" value="${item.sentDate}" onchange="updateData(${index}, 'sentDate', this.value)"></div>
+            <div class="input-row"><label>의견 접수일 (선택)</label><input type="date" value="${item.opinionDate}" onchange="updateData(${index}, 'opinionDate', this.value)"></div>
+            <div class="opinion-box">📍 의견접수 가능일: ${opinionHtml}</div>
+            <div class="decision-card">
+              <label>결정통보 예정일</label>
+              <div class="decision-date">${decisionHtml}</div>
+            </div>
+            <button onclick="deleteItem(${index})" style="width:100%; margin-top:15px; padding:8px; background:none; border:1px solid #fda4af; color:#e11d48; border-radius:8px; font-size:0.8rem;">기관 삭제하기</button>
+          </div>
         `;
         list.appendChild(el);
       });

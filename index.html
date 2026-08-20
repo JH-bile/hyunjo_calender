@@ -2,59 +2,69 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>시일 관리 매니저</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>현조캘린더</title>
   <style>
-    body { font-family: -apple-system, sans-serif; background: #f0f2f5; padding: 15px; }
-    .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    h2 { margin: 0 0 10px 0; font-size: 1.2rem; }
-    .btn-add { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; }
-    details { background: #fff; border-radius: 10px; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; }
-    summary { font-weight: bold; font-size: 1.1rem; cursor: pointer; padding: 5px; }
-    .input-row { margin: 10px 0; }
-    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-top: 5px; }
-    .result-box { background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px; border-left: 4px solid #007bff; font-size: 0.9rem; }
-    .d-day { color: #dc3545; font-weight: bold; }
-    dialog { border: none; border-radius: 10px; padding: 20px; width: 85%; }
+    :root { --primary: #2563eb; --accent: #dc2626; --bg: #f8fafc; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); padding: 15px; margin: 0; }
+    h1 { font-size: 1.5rem; color: #1e293b; margin-bottom: 20px; text-align: center; }
+    .btn-add { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    
+    details { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    summary { font-weight: 700; font-size: 1.1rem; cursor: pointer; color: #334155; list-style: none; }
+    summary::marker { display: none; }
+    summary:after { content: '▼'; float: right; font-size: 0.8rem; color: #94a3b8; }
+    
+    .input-row { margin: 15px 0; }
+    label { display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 5px; font-weight: 600; }
+    input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; background: #fdfdfd; }
+    
+    .opinion-box { background: #f1f5f9; padding: 12px; border-radius: 10px; margin: 10px 0; font-size: 0.9rem; color: #475569; }
+    .decision-card { background: #eff6ff; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #bfdbfe; }
+    .decision-card label { color: var(--primary); }
+    .decision-date { font-size: 1.3rem; font-weight: 800; color: #1e293b; margin-top: 5px; }
+    
+    .d-day { color: var(--accent); font-weight: 700; margin-left: 8px; }
+    .footer { text-align: center; font-size: 0.75rem; color: #94a3b8; margin-top: 30px; padding-bottom: 20px; }
+    dialog { border: none; border-radius: 16px; padding: 25px; width: 85%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
 
+  <h1>현조캘린더</h1>
   <button class="btn-add" onclick="document.getElementById('nameDialog').showModal()">+ 기관 추가하기</button>
-  <div id="itemList" style="margin-top: 20px;"></div>
+  <div id="itemList"></div>
 
-  <!-- 이름 입력 팝업 -->
+  <div class="footer">제작: 대전세종충청지역본부 요양지원부 박종현</div>
+
   <dialog id="nameDialog">
-    <h3>기관 이름 입력</h3>
-    <input type="text" id="orgName" placeholder="기관명 입력">
-    <div style="display:flex; gap:10px; margin-top:15px;">
-      <button onclick="addOrg()">확인</button>
-      <button onclick="document.getElementById('nameDialog').close()">취소</button>
+    <h3 style="margin-top:0">기관 이름</h3>
+    <input type="text" id="orgName" placeholder="기관명을 입력하세요">
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button onclick="addOrg()" style="flex:1; padding:10px; background:var(--primary); color:white; border:none; border-radius:8px;">확인</button>
+      <button onclick="document.getElementById('nameDialog').close()" style="flex:1; padding:10px; background:#e2e8f0; border:none; border-radius:8px;">취소</button>
     </div>
   </dialog>
 
   <script>
     let items = JSON.parse(localStorage.getItem('deadlines') || '[]');
-
     function save() { localStorage.setItem('deadlines', JSON.stringify(items)); render(); }
 
     function addOrg() {
       const name = document.getElementById('orgName').value;
       if (!name) return;
       items.push({ id: Date.now(), name, sentDate: '', opinionDate: '' });
-      save();
-      document.getElementById('orgName').value = '';
-      document.getElementById('nameDialog').close();
+      save(); document.getElementById('orgName').value = ''; document.getElementById('nameDialog').close();
     }
 
-    function formatDate(date) {
+    function formatDate(d) {
       const days = ['일', '월', '화', '수', '목', '금', '토'];
-      return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getDate().toString().padStart(2,'0')} (${days[date.getDay()]})`;
+      return `${d.getFullYear()}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getDate().toString().padStart(2,'0')} (${days[d.getDay()]})`;
     }
 
     function getDday(target) {
       const today = new Date(); today.setHours(0,0,0,0);
-      const diff = Math.ceil((target - today) / (1000*60*60*24));
+      const diff = Math.ceil((target - today) / (86400000));
       if (diff === 0) return "D-Day";
       return diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
     }
@@ -64,16 +74,12 @@
       list.innerHTML = '';
       items.forEach((item, index) => {
         const sent = item.sentDate ? new Date(item.sentDate) : null;
-        
-        let decisionHtml = "날짜를 입력하세요";
-        let opinionHtml = "날짜를 입력하세요";
+        let opinionHtml = "발송일 입력 필요", decisionHtml = "발송일 입력 필요";
 
         if (sent) {
-          // 1. 의견접수 가능일 (발송일+14)
           const opDue = new Date(sent); opDue.setDate(sent.getDate() + 14);
           opinionHtml = `${formatDate(opDue)} <span class="d-day">${getDday(opDue)}</span>`;
 
-          // 2. 결정통보 예정일 (의견접수일 존재 시 +30, 아니면 발송일 +30)
           const baseDate = item.opinionDate ? new Date(item.opinionDate) : new Date(sent);
           const decDue = new Date(baseDate); decDue.setDate(baseDate.getDate() + 30);
           decisionHtml = `${formatDate(decDue)} <span class="d-day">${getDday(decDue)}</span>`;
@@ -82,26 +88,21 @@
         const el = document.createElement('details');
         el.innerHTML = `
           <summary>${item.name}</summary>
-          <div class="input-row">
-            <label>지원결과서 발송일</label>
-            <input type="date" value="${item.sentDate}" onchange="updateData(${index}, 'sentDate', this.value)">
+          <div class="input-row"><label>지원결과서 발송일</label><input type="date" value="${item.sentDate}" onchange="updateData(${index}, 'sentDate', this.value)"></div>
+          <div class="input-row"><label>의견 접수일 (선택)</label><input type="date" value="${item.opinionDate}" onchange="updateData(${index}, 'opinionDate', this.value)"></div>
+          <div class="opinion-box">📍 의견접수 가능일: ${opinionHtml}</div>
+          <div class="decision-card">
+            <label>결정통보 예정일</label>
+            <div class="decision-date">${decisionHtml}</div>
           </div>
-          <div class="result-box">
-            <div>📍 결정통보 예정일: <br><strong>${decisionHtml}</strong></div>
-            <div style="margin-top:8px">📍 의견접수 가능일: <br><strong>${opinionHtml}</strong></div>
-          </div>
-          <div class="input-row">
-            <label>의견 접수일 (선택)</label>
-            <input type="date" value="${item.opinionDate}" onchange="updateData(${index}, 'opinionDate', this.value)">
-          </div>
-          <button onclick="deleteItem(${index})" style="background:#ffcccc; border:none; padding:5px; border-radius:5px; margin-top:10px;">삭제</button>
+          <button onclick="deleteItem(${index})" style="width:100%; margin-top:15px; padding:8px; background:none; border:1px solid #fda4af; color:#e11d48; border-radius:8px; font-size:0.8rem;">기관 삭제하기</button>
         `;
         list.appendChild(el);
       });
     }
 
-    function updateData(index, key, val) { items[index][key] = val; save(); }
-    function deleteItem(index) { if(confirm('삭제할까요?')) { items.splice(index, 1); save(); } }
+    function updateData(i, k, v) { items[i][k] = v; save(); }
+    function deleteItem(i) { if(confirm('이 기관을 삭제할까요?')) { items.splice(i, 1); save(); } }
     render();
   </script>
 </body>

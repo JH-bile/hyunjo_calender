@@ -10,7 +10,6 @@
     h1 { font-size: 1.5rem; color: #1e293b; margin-bottom: 20px; text-align: center; }
     .btn-add { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
     
-    /* 커스텀 카드 스타일 */
     .item-card { background: white; border-radius: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
     .card-header { padding: 16px; font-weight: 700; font-size: 1.1rem; cursor: pointer; color: #334155; display: flex; justify-content: space-between; align-items: center; }
     .card-content { padding: 0 16px 16px 16px; display: none; }
@@ -55,7 +54,9 @@
       render(); 
     }
 
-    function toggleDetails(index) {
+    // 클릭 이벤트가 밖으로 퍼져나가는 것을 막음
+    function toggleDetails(e, index) {
+      e.stopPropagation(); 
       expanded[index] = !expanded[index];
       localStorage.setItem('expanded', JSON.stringify(expanded));
       render();
@@ -91,7 +92,6 @@
           const opDue = new Date(sent); opDue.setDate(sent.getDate() + 14);
           opinionHtml = `${formatDate(opDue)} <span class="d-day">${getDday(opDue)}</span>`;
 
-          // 발송일 + 30일 (의견접수일 있으면 거기로부터 +30일)
           const baseDate = item.opinionDate ? new Date(item.opinionDate) : new Date(sent);
           const decDue = new Date(baseDate); decDue.setDate(baseDate.getDate() + 30);
           decisionHtml = `${formatDate(decDue)} <span class="d-day">${getDday(decDue)}</span>`;
@@ -101,7 +101,7 @@
         const el = document.createElement('div');
         el.className = 'item-card';
         el.innerHTML = `
-          <div class="card-header" onclick="toggleDetails(${index})">
+          <div class="card-header" onclick="toggleDetails(event, ${index})">
             ${item.name} <span>${isExpanded ? '▲' : '▼'}</span>
           </div>
           <div class="card-content" style="display: ${isExpanded ? 'block' : 'none'}">

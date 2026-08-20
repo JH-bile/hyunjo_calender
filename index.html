@@ -67,7 +67,6 @@
 
     function formatDate(d) {
       const days = ['일', '월', '화', '수', '목', '금', '토'];
-      // 월, 일을 2자리로(padStart 2)
       return `${d.getFullYear()}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getDate().toString().padStart(2,'0')}.(${days[d.getDay()]})`;
     }
 
@@ -84,20 +83,21 @@
       items.forEach((item, index) => {
         const invEnd = item.invEndDate ? new Date(item.invEndDate) : null;
         const sent = item.sentDate ? new Date(item.sentDate) : null;
+        const opDate = item.opinionDate ? new Date(item.opinionDate) : null;
         
         // 1. 발송 가능일 (조사종료일 + 29일)
         let dispatchHtml = invEnd ? `<span class="d-day">${getDdayString(new Date(invEnd.getTime() + 29*86400000))}</span>` : "입력 필요";
 
         // 2. 의견접수 가능일 (발송일 + 14일)
-        let opinionDateObj = sent ? new Date(sent.getTime() + 14*86400000) : null;
-        let opinionHtml = opinionDateObj ? `<span class="d-day">${getDdayString(opinionDateObj)}</span>` : "입력 필요";
+        let opinionHtml = sent ? `<span class="d-day">${getDdayString(new Date(sent.getTime() + 14*86400000))}</span>` : "입력 필요";
 
         // 3. 결정통보 예정일
         let decisionHtml = "입력 필요";
         if(sent) {
-            // 접수일 있으면 그날+29, 없으면 발송일+14
-            let baseDate = item.opinionDate ? new Date(item.opinionDate) : new Date(sent);
-            let daysToAdd = item.opinionDate ? 29 : 14; 
+            // 의견 접수 시: 접수일 + 29일
+            // 미접수 시: 발송일 + 15일 (의견접수 가능일 14일 + 1일)
+            let baseDate = opDate ? opDate : sent;
+            let daysToAdd = opDate ? 29 : 15;
             decisionHtml = `<span class="d-day">${getDdayString(new Date(baseDate.getTime() + daysToAdd*86400000))}</span>`;
         }
 

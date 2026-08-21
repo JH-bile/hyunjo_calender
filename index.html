@@ -85,19 +85,19 @@
         const sent = item.sentDate ? new Date(item.sentDate) : null;
         const opDate = item.opinionDate ? new Date(item.opinionDate) : null;
         
-        // 1. 발송 가능일 (조사종료일 + 29일)
-        let dispatchHtml = invEnd ? `<span class="d-day">${getDdayString(new Date(invEnd.getTime() + 29*86400000))}</span>` : "입력 필요";
+        // 1. 지원결과서 발송 가능일 (조사종료일 + 30일)
+        let dispatchHtml = invEnd ? `<span class="d-day">${getDdayString(new Date(invEnd.getTime() + 30*86400000))}</span>` : "입력 필요";
 
-        // 2. 의견접수 가능일 (발송일 + 14일)
+        // 2. 의견접수 가능일 (지원결과서 발송일 + 14일)
         let opinionHtml = sent ? `<span class="d-day">${getDdayString(new Date(sent.getTime() + 14*86400000))}</span>` : "입력 필요";
 
         // 3. 결정통보 예정일
         let decisionHtml = "입력 필요";
         if(sent) {
-            // 의견 접수 시: 접수일 + 29일
-            // 미접수 시: 발송일 + 15일 (의견접수 가능일 14일 + 1일)
+            // 의견 접수 시: 접수일 + 30일
+            // 미접수 시: 발송일 + 15일 (의견접수 가능일 다음날)
             let baseDate = opDate ? opDate : sent;
-            let daysToAdd = opDate ? 29 : 15;
+            let daysToAdd = opDate ? 30 : 15;
             decisionHtml = `<span class="d-day">${getDdayString(new Date(baseDate.getTime() + daysToAdd*86400000))}</span>`;
         }
 

@@ -24,25 +24,38 @@
     label { display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 5px; font-weight: 600; }
     input[type="date"], input[type="text"] { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; background: #fdfdfd; }
     
-    /* 결과 박스 & 포인트 바 */
     .result-box { background: #f8fafc; padding: 12px 14px; border-radius: 10px; margin: 10px 0; border: 1px solid #e2e8f0; border-left: 5px solid var(--primary); }
     .result-label { font-weight: 700; font-size: 0.85rem; color: #475569; display: block; margin-bottom: 4px; }
     
     .decision-card { background: #eff6ff; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #bfdbfe; }
     .decision-card label { color: var(--primary); font-size: 0.8rem; font-weight: bold; }
     
-    /* 날짜 빨간색 볼드 강조 */
     .date-highlight { color: var(--accent); font-size: 1.05rem; font-weight: 700; display: block; }
     .no-data { color: #94a3b8; font-size: 0.85rem; }
 
-    /* 달력 스타일 */
+    /* 달력 그리드 깨짐 방지 핵심 수정 */
     .cal-container { background: white; border-radius: 16px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: none; }
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; width: 100%; }
     .cal-day-head { text-align: center; font-size: 0.75rem; font-weight: bold; color: #64748b; padding-bottom: 8px; }
-    .cal-cell { min-height: 80px; background: #fafafa; border-radius: 6px; padding: 4px; font-size: 0.7rem; }
-    .cal-num { font-weight: bold; margin-bottom: 2px; display: block; }
-    .cal-badge { width: 100%; padding: 2px 3px; border-radius: 3px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; font-size: 0.65rem; }
+    .cal-cell { min-height: 80px; background: #fafafa; border-radius: 6px; padding: 4px 2px; font-size: 0.7rem; min-width: 0; overflow: hidden; }
+    .cal-num { font-weight: bold; margin-bottom: 2px; display: block; padding-left: 2px; }
+    
+    /* 텍스트 넘침 방지 및 말줄임표(...) */
+    .cal-badge { 
+      display: block; 
+      width: 100%; 
+      max-width: 100%; 
+      padding: 2px 3px; 
+      border-radius: 3px; 
+      margin-bottom: 2px; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      font-weight: 600; 
+      font-size: 0.65rem; 
+      box-sizing: border-box;
+    }
     .badge-input { background: #e2e8f0; color: #475569; }
     .badge-dispatch { background: #dbeafe; color: #1d4ed8; }
     .badge-opinion { background: #fef3c7; color: #b45309; }
@@ -58,7 +71,7 @@
 
   <div class="tab-bar">
     <button id="tabListBtn" class="tab-btn active" onclick="switchTab('list')">📋 기관 목록</button>
-    <button id="tabCalBtn" class="tab-btn" onclick="switchTab('calendar')">📅 월간 달력</button>
+    <button id="tabCalBtn" class="tab-btn" onclick="switchTab('calendar')">📅 업무 달력</button>
   </div>
 
   <div id="listView">
@@ -149,11 +162,8 @@
         const sent = item.sentDate ? new Date(item.sentDate) : null;
         const opDate = item.opinionDate ? new Date(item.opinionDate) : null;
 
-        // 초일불산입: 조사종료일 + 30일
         const dispDate = invEnd ? new Date(invEnd.getTime() + 30*86400000) : null;
-        // 초일불산입: 발송일 + 14일
         const opinDate = sent ? new Date(sent.getTime() + 14*86400000) : null;
-        // 초일불산입: 의견접수일 + 30일 또는 발송일 + 15일
         const decDate = sent ? new Date((opDate ? opDate : sent).getTime() + (opDate ? 30 : 15)*86400000) : null;
 
         const dispHtml = dispDate ? `<span class="date-highlight">${getDdayString(dispDate)}</span>` : `<span class="no-data">조사종료일 입력 필요</span>`;
@@ -232,20 +242,20 @@
         let html = `<span class="cal-num">${d}</span>`;
         
         items.forEach(it => {
-          if (it.invEndDate === key) html += `<div class="cal-badge badge-input">종료:${it.name}</div>`;
-          if (it.sentDate === key) html += `<div class="cal-badge badge-input">발송:${it.name}</div>`;
-          if (it.opinionDate === key) html += `<div class="cal-badge badge-input">접수:${it.name}</div>`;
+          if (it.invEndDate === key) html += `<div class="cal-badge badge-input" title="종료:${it.name}">종료:${it.name}</div>`;
+          if (it.sentDate === key) html += `<div class="cal-badge badge-input" title="발송:${it.name}">발송:${it.name}</div>`;
+          if (it.opinionDate === key) html += `<div class="cal-badge badge-input" title="접수:${it.name}">접수:${it.name}</div>`;
           
           if (it.invEndDate) {
             const t = new Date(new Date(it.invEndDate).getTime() + 30*86400000);
             if (formatDate(t) === formatDate(new Date(year, month, d))) {
-              html += `<div class="cal-badge badge-dispatch">발송:${it.name}</div>`;
+              html += `<div class="cal-badge badge-dispatch" title="발송:${it.name}">발송:${it.name}</div>`;
             }
           }
           if (it.sentDate) {
             const t = new Date(new Date(it.sentDate).getTime() + 14*86400000);
             if (formatDate(t) === formatDate(new Date(year, month, d))) {
-              html += `<div class="cal-badge badge-opinion">의견:${it.name}</div>`;
+              html += `<div class="cal-badge badge-opinion" title="의견:${it.name}">의견:${it.name}</div>`;
             }
           }
           
@@ -253,7 +263,7 @@
           if (base) {
             const target = new Date(base.getTime() + (it.opinionDate ? 30 : 15)*86400000);
             if (formatDate(target) === formatDate(new Date(year, month, d))) {
-              html += `<div class="cal-badge badge-decision">결정:${it.name}</div>`;
+              html += `<div class="cal-badge badge-decision" title="결정:${it.name}">결정:${it.name}</div>`;
             }
           }
         });
